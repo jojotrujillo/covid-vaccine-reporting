@@ -1,0 +1,5 @@
+{
+  "scripts": {
+    "postinstall": "cd Project1/ClientApp && npm install"
+  }
+}
