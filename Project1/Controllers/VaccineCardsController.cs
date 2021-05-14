@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using StackExchange.Redis;
 using Tesseract;
 
 namespace Project1.Controllers
@@ -15,10 +16,17 @@ namespace Project1.Controllers
     public class VaccineCardsController : ControllerBase
     {
         private readonly ILogger<VaccineCardsController> _logger;
+        private RedisInterface obj = new RedisInterface();
+        private IDatabase _db;
+        private static readonly string[] fields = new[]
+        {
+            "Last Name", "First Name", "MI", "Date of birth", "Patient number (medical record or IIS record number", "1st Dose COVID-19", "2nd Dose COVID-19", "Date", "Healthcare Professional or Clinic Site"
+        };
 
         public VaccineCardsController(ILogger<VaccineCardsController> logger)
         {
             _logger = logger;
+            _db = obj.Connection.GetDatabase();
         }
 
         [HttpPost]
@@ -42,7 +50,28 @@ namespace Project1.Controllers
                 }
             }
 
+            _db.StringSet("timestamp", card.TimeStamp);
+
+            for (int i = 0; i < fields.Length; i++)
+            {
+                _db.StringSet(fields[i] + card.TimeStamp, card.ImageText[i]);
+            }
+
             return Ok();
+        }
+
+        [HttpGet]
+        public IEnumerable<string> Get()
+        {
+            var cardText = new List<string>();
+            var stamp = _db.StringGet("timestamp");
+
+            foreach (var field in fields)
+            {
+                cardText.Add(_db.StringGet(field + stamp));
+            }
+
+            return cardText;
         }
 
         private static string GetTimestamp(DateTime value)
