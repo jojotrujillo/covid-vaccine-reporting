@@ -20,7 +20,13 @@ namespace Project1
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-
+            services.AddCors(options =>
+            {
+                options.AddDefaultPolicy(builder =>
+                {
+                    builder.WithOrigins("https://localhost:44363");
+                });
+            });
             services.AddControllersWithViews();
 
             // In production, the React files will be served from this directory
@@ -66,6 +72,8 @@ namespace Project1
                     spa.UseReactDevelopmentServer(npmScript: "start");
                 }
             });
+
+            app.UseCors();
         }
     }
 }

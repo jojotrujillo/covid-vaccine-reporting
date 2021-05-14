@@ -1,4 +1,5 @@
 ﻿import React, { Component } from 'react';
+import { Link } from 'react-router-dom';
 import * as Icon from 'react-feather';
 import './UploadCard.scss';
 
@@ -7,7 +8,7 @@ export class UploadCard extends Component {
 
     constructor(props) {
         super(props);
-        this.state = { vaccineCards: [], loading: true };
+        this.state = { loading: true };
     }
 
     componentDidMount() {
@@ -79,8 +80,12 @@ export class UploadCard extends Component {
             canvas.width = video.videoWidth;
             canvas.height = video.videoHeight;
             canvas.getContext('2d').drawImage(video, 0, 0);
-            screenshotImage.src = canvas.toDataURL('image/webp');
+            screenshotImage.src = canvas.toDataURL();
             screenshotImage.classList.remove('d-none');
+
+            //console.log(screenshotImage.src);
+
+            this.captureVaccineCard(screenshotImage.src);
         };
 
         pause.onclick = pauseStream;
@@ -153,6 +158,8 @@ export class UploadCard extends Component {
     }
 
     render() {
+        let contents = this.state.loading ? <div></div> : <Link to="/results-page"><button className="results-btn" type="button">Click to see the results</button></Link>;
+        
         return (
             <div className="display-cover">
                 <video autoPlay></video>
@@ -168,16 +175,36 @@ export class UploadCard extends Component {
 
                 <div className="controls">
                     <button className="btn btn-danger play" title="Play"><i data-feather="play-circle"></i></button>
-                    <button class="btn btn-info pause d-none" title="Pause"><i data-feather="pause"></i></button>
+                    <button className="btn btn-info pause d-none" title="Pause"><i data-feather="pause"></i></button>
                     <button className="btn btn-outline-success screenshot d-none" title="Screenshot"><i data-feather="image"></i></button>
                 </div>
+
+                {contents}
             </div>
         );
     }
 
-    async captureVaccineCard() {
-        const response = await fetch('vaccinecards');
-        const data = await response.json();
-        this.setState({ vaccineCards: data, loading: false });
+    async captureVaccineCard(screenshot) {
+        let data = {
+            id: new Date().toISOString(),
+            base64: screenshot
+        };
+
+        const response = await fetch('vaccinecards',
+        {
+            method: 'POST',
+            headers: {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        }).then((response) => {
+            console.log(response, 'response');
+            if (response.status === 200) {
+                this.setState({ loading: false });
+            }
+        }).catch((err) => {
+            console.log(err);
+        });
     }
 }
