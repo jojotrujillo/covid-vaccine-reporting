@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using StackExchange.Redis;
 using Tesseract;
+using System.Text;
 
 namespace Project1.Controllers
 {
@@ -52,10 +53,19 @@ namespace Project1.Controllers
 
             _db.StringSet("timestamp", card.TimeStamp);
 
-            for (int i = 0; i < fields.Length; i++)
+            try
             {
-                _db.StringSet(fields[i] + card.TimeStamp, card.ImageText[i]);
+                for (int i = 0; i < fields.Length; i++)
+                {
+                    _db.StringSet(fields[i] + card.TimeStamp, card.ImageText[i]);
+                }
             }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message);
+            }
+
+            SaveToCsv(card.TimeStamp, card.ImageText);
 
             return Ok();
         }
@@ -77,6 +87,21 @@ namespace Project1.Controllers
         private static string GetTimestamp(DateTime value)
         {
             return value.ToString("yyyyMMddHHmmssffff");
+        }
+
+        private static void SaveToCsv(string timestamp, List<string> text)
+        {
+            var filePath = timestamp + ".csv";
+            var delimiter = ",";
+            var length = text.Count;
+            var sb = new StringBuilder();
+
+            for (int i = 0; i < length; i++)
+            {
+                sb.AppendLine(string.Join(delimiter, text[i]));
+            }
+
+            System.IO.File.WriteAllText(filePath, sb.ToString());
         }
     }
 }

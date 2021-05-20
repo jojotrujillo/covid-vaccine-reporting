@@ -12,7 +12,7 @@ namespace Project1
         {
             RedisInterface.lazyConnection = new Lazy<ConnectionMultiplexer>(() =>
             {
-                return ConnectionMultiplexer.Connect("localhost:6379");
+                return ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_URL"));
             });
         }
 
